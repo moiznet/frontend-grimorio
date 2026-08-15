@@ -1,7 +1,7 @@
 # 📚 Guía Completa y Temario Consolidado: Angular Moderno & RxJS
 
 ---
-
+yy
 ## 📌 1. Arquitectura y Componentes
 
 * **Standalone Components vs. NgModules (Angular 14+):**

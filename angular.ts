@@ -666,12 +666,220 @@ export class UserSearchComponent {
 }
 
 
+//Built-in Control Flow
+/* La nueva sintaxis de control de flujo (Built-in Control Flow) introducida en Angular 17 reemplaza las directivas estructurales con bloques nativos que mejoran el rendimiento, la legibilidad y no requieren importar CommonModule.
 
+Usando el mismo estado del componente en TypeScript:
 
-/* Las versiones 14, 16 y 17 son los tres pilares del cambio estructural en Angular:
+HTML
+<!-- 1. Bloque @if / @else -->
+@if (isLoggedIn) {
+  <p>¡Bienvenido de nuevo, usuario!</p>
+} @else {
+  <p>Por favor, inicia sesión para continuar.</p>
+}
 
-Angular 14: Componentes Standalone (despedida progresiva a los NgModules) y Typed Forms.
+<hr>
 
-Angular 16: Nacimiento de Signals, la función inject() como estándar y el puente @angular/core/rxjs-interop.
+<!-- 2. Bloque @for (requiere definir la propiedad 'track') -->
+<h3>Lista de Productos</h3>
+<ul>
+  @for (producto of productos; track producto.id; let i = $index) {
+    <li>{{ i + 1 }}. {{ producto.nombre }} - <strong>{{ producto.estado }}</strong></li>
+  } @empty {
+    <li>No hay productos disponibles.</li>
+  }
+</ul>
 
-Angular 17: Nuevo Control Flow (@if, @for), bloques @defer y compilación rápida con Esbuild/Vite. */
+<hr>
+
+<!-- 3. Bloque @switch -->
+<h3>Modo de Visualización</h3>
+
+@switch (vistaActual) {
+  @case ('lista') {
+    <p>Viendo los productos en modo **Lista**.</p>
+  }
+  @case ('mosaico') {
+    <p>Viendo los productos en modo **Mosaico**.</p>
+  }
+  @case ('detalles') {
+    <p>Viendo los productos en modo **Detalles**.</p>
+  }
+  @default {
+    <p>Vista no reconocida.</p>
+  }
+} */
+
+//binding clases & styles
+
+/* 
+El property binding de clases ([class...]) y estilos ([style...]) es la forma nativa e ideal en Angular para modificar la apariencia de un elemento sin depender de ngClass o ngStyle. Permite usar expresiones condicionales como operadores ternarios (? :) o evaluadores booleanos directos.
+
+Componente en TypeScript (app.component.ts)
+
+TypeScript
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+  // Estados para condiciones
+  isOnline: boolean = true;
+  userRole: string = 'admin'; // 'admin', 'user' o 'guest'
+  batteryLevel: number = 15; // Porcentaje
+}
+Plantilla en HTML (app.component.html)
+
+HTML
+<!-- 1. Property Binding para CLASES [class...] -->
+
+<!-- Evalúa un booleano: activa la clase 'status-online' si isOnline es true -->
+<span [class.status-online]="isOnline">
+  Estado del usuario
+</span>
+
+<!-- Operador ternario: asigna la clase 'text-success' o 'text-danger' según la condición -->
+<p [class]="isOnline ? 'text-success' : 'text-danger'">
+  {{ isOnline ? 'Conectado' : 'Desconectado' }}
+</p>
+
+<!-- Múltiples condiciones: aplica distintas clases según el valor de userRole -->
+<div [class]="userRole === 'admin' ? 'badge-admin' : userRole === 'user' ? 'badge-user' : 'badge-guest'">
+  Rol: {{ userRole }}
+</div>
+
+<hr>
+
+<!-- 2. Property Binding para ESTILOS [style...] -->
+
+<!-- Evalúa una condición booleana para definir el valor CSS -->
+<button [style.background-color]="isOnline ? '#198754' : '#dc3545'">
+  Acción
+</button>
+
+<!-- Especifica la unidad directamente (.px, .rem, .%) y calcula valores dinámicos -->
+<div 
+  [style.width.%]="batteryLevel" 
+  [style.color]="batteryLevel < 20 ? 'red' : 'green'">
+  Batería: {{ batteryLevel }}%
+</div>
+
+<!-- Aplica estilos sólo si la condición es verdadera (si es false, remueve la propiedad) -->
+<h2 [style.text-decoration]="isOnline ? 'underline' : 'none'">
+  Título dinámico
+</h2> */
+
+///authguard
+
+/* En Angular, un CanActivateFn (Functional Route Guard) es la forma estándar de proteger rutas.
+
+A continuación tienes un ejemplo completo que bloquea el acceso a una ruta y redirige al usuario a /login si no está autenticado.
+
+1. El Servicio de Autenticación (auth.service.ts)
+
+TypeScript
+import { Injectable } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AuthService {
+  private loggedIn = false;
+
+  isLoggedIn(): boolean {
+    return this.loggedIn;
+  }
+
+  // Métodos para cambiar estado (ejemplo)
+  login() { this.loggedIn = true; }
+  logout() { this.loggedIn = false; }
+}
+2. El AuthGuard Funcional (auth.guard.ts)
+
+TypeScript
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+import { AuthService } from './auth.service';
+
+export const authGuard: CanActivateFn = (route, state) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.isLoggedIn()) {
+    return true; // Permite el acceso a la ruta
+  }
+
+  // Redirige al login si no está autenticado
+  return router.createUrlTree(['/login']);
+};
+3. Configuración de Rutas (app.routes.ts)
+
+Aplica el guard dentro de la propiedad canActivate de la ruta protegida:
+
+TypeScript
+import { Routes } from '@angular/router';
+import { DashboardComponent } from './dashboard/dashboard.component';
+import { LoginComponent } from './login/login.component';
+import { authGuard } from './auth.guard';
+
+export const routes: Routes = [
+  { path: 'login', component: LoginComponent },
+  { 
+    path: 'dashboard', 
+    component: DashboardComponent,
+    canActivate: [authGuard] // Ruta protegida
+  },
+  { path: '', redirectTo: 'login', pathMatch: 'full' }
+]; */
+
+/* 
+///interceptor para jwt
+
+El interceptor HTTP funcional (HttpInterceptorFn) te permite modificar las peticiones de salida de forma global. Dado que los objetos HttpRequest son inmutables en Angular, el interceptor clona la petición para agregar el encabezado Authorization.
+
+1. El Interceptor Funcional (auth.interceptor.ts)
+
+TypeScript
+import { HttpInterceptorFn } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { AuthService } from './auth.service';
+
+export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  const authService = inject(AuthService);
+  
+  // Obtiene el token desde el servicio (o directamente desde localStorage)
+  const token = authService.getToken(); // ej: localStorage.getItem('token')
+
+  // Si existe el token, clona la petición y añade el encabezado
+  if (token) {
+    const authReq = req.clone({
+      setHeaders: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return next(authReq); // Envía la petición modificada
+  }
+
+  // Si no hay token, continúa con la petición original sin cambios
+  return next(req);
+};
+2. Configuración Global (app.config.ts)
+
+Para que el interceptor funcione, debes registrarlo usando withInterceptors al configurar el cliente HTTP de la aplicación:
+
+TypeScript
+import { ApplicationConfig } from '@angular/core';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { authInterceptor } from './auth.interceptor';
+
+export const appConfig: ApplicationConfig = = {
+  providers: [
+    provideHttpClient(
+      withInterceptors([authInterceptor]) // Registra el interceptor aquí
+    )
+  ]
+}; */

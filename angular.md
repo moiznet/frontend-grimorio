@@ -224,3 +224,14 @@ Respuesta: Usando la sintaxis @if (obs$ | async; as data) en la plantilla o apli
 ¿Cuál es la ventaja de providedIn: 'root' en un servicio?
 
 Respuesta: Crea una instancia única (Singleton) disponible globalmente y permite el Tree-shaking (si el servicio no se usa, no se incluye en el paquete JS final).
+
+/* Las versiones 14, 16 y 17 son los tres pilares del cambio estructural en Angular:
+
+ 
+Angular 13+: property binding nativo de clases y estilos sin necesidad de importar.
+
+Angular 14: Componentes Standalone (despedida progresiva a los NgModules) y Typed Forms.
+
+Angular 16: Nacimiento de Signals, la función inject() como estándar y el puente @angular/core/rxjs-interop.
+
+Angular 17: Nuevo Control Flow (@if, @for), bloques @defer y compilación rápida con Esbuild/Vite. */

@@ -1000,3 +1000,152 @@ export class UserEditModalComponent {
   }
 }
 
+/* A continuación te presento una implementación completa de un servicio de Angular (UserService) para consumir una API REST realizando operaciones CRUD (GET, POST, PUT/PATCH y DELETE).
+
+Incluye el uso de HttpClient, Signals, tipos estrictos con Interfaces y manejo de errores básico.
+
+1. La Interfaz del Modelo (user.model.ts)
+TypeScript */
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+// Omitimos el 'id' para la creación, ya que el servidor lo genera
+export type CreateUserDto = Omit<User, 'id'>;
+
+// Hacemos los campos opcionales para actualizaciones parciales
+export type UpdateUserDto = Partial<CreateUserDto>;
+// 2. El Servicio HTTP (user.service.ts)
+// TypeScript
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { User, CreateUserDto, UpdateUserDto } from './user.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class UserService {
+  private http = inject(HttpClient);
+  private readonly apiUrl = 'https://api.example.com/api/users';
+
+  // 1. GET: Obtener todos los usuarios
+  getUsers(): Observable<User[]> {
+    return this.http.get<User[]>(this.apiUrl);
+  }
+
+  // 2. GET BY ID: Obtener un solo usuario por su ID
+  getUserById(id: number): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/${id}`);
+  }
+
+  // 3. POST: Crear un nuevo usuario
+  createUser(user: CreateUserDto): Observable<User> {
+    return this.http.post<User>(this.apiUrl, user);
+  }
+
+  // 4. PUT: Actualizar un usuario completo
+  updateUser(id: number, user: CreateUserDto): Observable<User> {
+    return this.http.put<User>(`${this.apiUrl}/${id}`, user);
+  }
+
+  // 5. PATCH: Actualizar parcialmente un usuario (campos específicos)
+  patchUser(id: number, changes: UpdateUserDto): Observable<User> {
+    return this.http.patch<User>(`${this.apiUrl}/${id}`, changes);
+  }
+
+  // 6. DELETE: Eliminar un usuario
+  deleteUser(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+}
+// 3. Ejemplo de Consumo en un Componente (user-manager.component.ts)
+// Así es como utilizas cada método del servicio dentro de un componente Standalone combinándolo con Signals:
+
+// TypeScript
+import { Component, inject, signal, OnInit } from '@angular/core';
+import { UserService } from './user.service';
+import { User, CreateUserDto } from './user.model';
+
+@Component({
+  selector: 'app-user-manager',
+  standalone: true,
+  template: `
+    <h2>Gestión de Usuarios</h2>
+    
+    <button (click)="addUser()">Crear Usuario</button>
+
+    <ul>
+      @for (user of users(); track user.id) {
+        <li>
+          {{ user.name }} ({{ user.email }})
+          <button (click)="editUser(user.id)">Editar</button>
+          <button (click)="removeUser(user.id)">Eliminar</button>
+        </li>
+      }
+    </ul>
+  `
+})
+export class UserManagerComponent implements OnInit {
+  private userService = inject(UserService);
+
+  // Estado reactivo con Signal
+  users = signal<User[]>([]);
+
+  ngOnInit(): void {
+    this.loadUsers();
+  }
+
+  // Lectura (GET)
+  loadUsers(): void {
+    this.userService.getUsers().subscribe({
+      next: (data) => this.users.set(data),
+      error: (err) => console.error('Error al cargar usuarios', err)
+    });
+  }
+
+  // Creación (POST)
+  addUser(): void {
+    const newUser: CreateUserDto = {
+      name: 'Sebastian Bernal',
+      email: 'juan@example.com'
+    };
+
+    this.userService.createUser(newUser).subscribe({
+      next: (createdUser) => {
+        // Actualizamos el Signal inmutablemente añadiendo el nuevo registro
+        this.users.update(current => [...current, createdUser]);
+      }
+    });
+  }
+
+  // Edición (PUT/PATCH)
+  editUser(id: number): void {
+    this.userService.patchUser(id, { name: 'Sebastian Actualizado' }).subscribe({
+      next: (updatedUser) => {
+        this.users.update(current => 
+          current.map(u => u.id === id ? updatedUser : u)
+        );
+      }
+    });
+  }
+
+  // Borrado (DELETE)
+  removeUser(id: number): void {
+    this.userService.deleteUser(id).subscribe({
+      next: () => {
+        this.users.update(current => current.filter(u => u.id !== id));
+      }
+    });
+  }
+}
+🔑/*  Aspectos Clave a Destacar en la Entrevista
+Inyección con inject(HttpClient): Se prefiere la función inject() sobre la inyección tradicional por constructor.
+
+Tipado estricto de respuesta: Métodos como http.get<User[]>() le dicen a TypeScript exactamente qué tipo de dato devolverá la petición.
+
+PUT vs PATCH: PUT reemplaza el objeto completo en el servidor; PATCH solo envía los campos que sufrieron cambios (UpdateUserDto).
+
+Actualizaciones inmutables en Signals: Al hacer un POST, PATCH o DELETE, se usa .update() modificando el array sin mutar la referencia original. */

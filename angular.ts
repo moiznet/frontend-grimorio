@@ -883,3 +883,120 @@ export const appConfig: ApplicationConfig = = {
     )
   ]
 }; */
+
+
+// routes necesesario
+// app.component.ts
+import { Component } from '@angular/core';
+import { RouterOutlet, RouterLink } from '@angular/router'; // 💡 Las directivas de UI
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [
+    RouterOutlet, // Necesario para la etiqueta <router-outlet></router-outlet>
+    RouterLink    // Necesario para las directivas [routerLink]="['/path']"
+  ],
+  templateUrl: './app.component.html'
+})
+export class AppComponent {}
+
+/* 
+
+1. Componente que abre el Modal (parent.component.ts)
+El componente padre utiliza el servicio MatDialog para abrir el modal, enviarle datos de entrada mediante la propiedad data, y suscribirse o procesar la respuesta al cerrarse mediante un Observable o Promise.
+
+TypeScript */
+import { Component, inject, signal } from '@angular/core';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { UserEditModalComponent } from './user-edit-modal.component';
+
+export interface UserData {
+  id: number;
+  name: string;
+}
+
+@Component({
+  selector: 'app-parent',
+  standalone: true,
+  imports: [MatDialogModule],
+  template: `
+    <h2>Usuario: {{ user().name }}</h2>
+    <button (click)="openEditModal()">Editar Usuario</button>
+  `
+})
+export class ParentComponent {
+  private dialog = inject(MatDialog);
+  
+  // Estado local usando Signal
+  user = signal<UserData>({ id: 1, name: 'Juan Bernal' });
+
+  openEditModal(): void {
+    // 1. Abre el modal, pasa datos y define configuración
+    const dialogRef = this.dialog.open(UserEditModalComponent, {
+      width: '400px',
+      data: { id: this.user().id, name: this.user().name } // Data de entrada
+    });
+
+    // 2. Escucha la respuesta enviada al cerrar
+    dialogRef.afterClosed().subscribe((updatedName: string | undefined) => {
+      if (updatedName) {
+        this.user.update(u => ({ ...u, name: updatedName }));
+      }
+    });
+  }
+}
+/* 2. Componente dentro del Modal (user-edit-modal.component.ts)
+El modal consume los datos de entrada usando el Token de inyección MAT_DIALOG_DATA y controla el cierre devolviendo información mediante MatDialogRef.
+
+TypeScript */
+import { Component, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { 
+  MAT_DIALOG_DATA, 
+  MatDialogRef, 
+  MatDialogModule 
+} from '@angular/material/dialog';
+import { UserData } from './parent.component';
+
+@Component({
+  selector: 'app-user-edit-modal',
+  standalone: true,
+  imports: [MatDialogModule, FormsModule],
+  template: `
+    <h2 mat-dialog-title>Editar Usuario</h2>
+    
+    <mat-dialog-content>
+      <label>Nombre:</label>
+      <input [(ngModel)]="currentName" />
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+      <!-- Cierra devolviendo undefined (Cancelar) -->
+      <button (click)="cancel()">Cancelar</button>
+      
+      <!-- Cierra enviando los nuevos datos (Guardar) -->
+      <button (click)="save()" color="primary">Guardar</button>
+    </mat-dialog-actions>
+  `
+})
+export class UserEditModalComponent {
+  // Inyección del controlador del modal para cerrarlo
+  private dialogRef = inject(MatDialogRef<UserEditModalComponent>);
+  
+  // Inyección de los datos pasados desde el padre
+  public data = inject<UserData>(MAT_DIALOG_DATA);
+
+  // Estado local prellenado con los datos recibidos
+  currentName = this.data.name;
+
+  save(): void {
+    // Retorna el dato al componente padre al cerrar
+    this.dialogRef.close(this.currentName);
+  }
+
+  cancel(): void {
+    this.dialogRef.close(); // Cierra sin retornar datos
+  }
+}
+

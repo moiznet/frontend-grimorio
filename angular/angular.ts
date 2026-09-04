@@ -1035,7 +1035,7 @@ export class UserService {
   getUsers(): Observable<User[]> {
     return this.http.get<User[]>(this.apiUrl);
   }
-
+, 
   // 2. GET BY ID: Obtener un solo usuario por su ID
   getUserById(id: number): Observable<User> {
     return this.http.get<User>(`${this.apiUrl}/${id}`);
@@ -1149,3 +1149,21 @@ Tipado estricto de respuesta: Métodos como http.get<User[]>() le dicen a TypeSc
 PUT vs PATCH: PUT reemplaza el objeto completo en el servidor; PATCH solo envía los campos que sufrieron cambios (UpdateUserDto).
 
 Actualizaciones inmutables en Signals: Al hacer un POST, PATCH o DELETE, se usa .update() modificando el array sin mutar la referencia original. */
+
+git switch -c feature/login-jwt
+git add .
+git commit -m "feat: termino la funcionalidad X"
+git push origin mi-rama-feature
+
+# 1. Estando en tu rama feature, actualizas main remoto
+git fetch origin
+
+# 2. Traes los últimos cambios de main a TU rama de feature
+git merge origin/main   # (o git rebase origin/main)
+
+# 3. Pruebas que todo funcione y resuelves conflictos aquí
+
+# 4. Ahora sí, vas a main y haces el merge limpio
+git checkout main
+git merge mi-rama-feature
+git push origin main

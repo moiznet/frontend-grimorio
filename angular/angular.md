@@ -77,7 +77,7 @@ yy
   * `from([1, 2, 3])`: Itera sobre la estructura y emite elemento por elemento.
 * **Operadores de Aplanamiento:**
   * **`switchMap`:** Cancela la petición anterior en vuelo si llega un nuevo valor. *(Caso: Buscadores / Autocompletado)*.
-  * **`mergeMap`:** Ejecuta todas las peticiones en paralelo sin cancelar ni ordenar. *(Caso: Subida masiva de archivos)*.
+  * **`jeMap`:** Ejecuta todas las peticiones en paralelo sin cancelar ni ordenar. *(Caso: Subida masiva de archivos)*.
   * **`concatMap`:** Encola las peticiones y las ejecuta secuencialmente en orden estricto. *(Caso: Transacciones o escrituras dependientes)*.
   * **`exhaustMap`:** Ignora/descarta nuevos eventos hasta que la petición activa complete. *(Caso: Botones de Pago / Evitar doble clic)*.
 * **Manejo de Errores:**
